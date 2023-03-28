@@ -104,8 +104,13 @@ app.get('/search', async (req, res) => {
   const query = req.query.query;
   const accessToken = req.query.access_token;
 
+  // Instantiate a new SpotifyWebApi object with the access token
+  const spotifyApiWithToken = new SpotifyWebApi({
+    accessToken: accessToken,
+  });
+
   try {
-    const data = await spotifyApi.searchTracks(query, { limit: 1, offset: 0, market: 'US' });
+    const data = await spotifyApiWithToken.searchTracks(query, { limit: 1, offset: 0, market: 'US' });
 
     if (!data.body.tracks.items || data.body.tracks.items.length === 0) {
       res.status(404).send('No tracks found');
@@ -113,11 +118,14 @@ app.get('/search', async (req, res) => {
     }
 
     const track = data.body.tracks.items[0];
-    const audioFeatures = await spotifyApi.getAudioFeaturesForTrack(track.id);
+    const audioFeatures = await spotifyApiWithToken.getAudioFeaturesForTrack(track.id);
 
     res.json(audioFeatures);
   } catch (error) {
     res.status(500).send(error.message);
+  }
+});
+
   }
 });
 
