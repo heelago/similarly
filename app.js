@@ -1,5 +1,9 @@
 console.log('APP JS INIT');
 
+import SpotifyWebApi from 'spotify-web-api-js';
+
+const spotifyApi = new SpotifyWebApi();
+
 function getURLParams() {
   const searchParams = new URLSearchParams(window.location.search.substring(1));
   const params = {};
@@ -10,13 +14,8 @@ function getURLParams() {
 }
 
 async function searchTrack(query, accessToken) {
-  const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=1`, {
-    headers: {
-      'Authorization': 'Bearer ' + accessToken
-    }
-  });
-
-  const data = await response.json();
+  spotifyApi.setAccessToken(accessToken);
+  const data = await spotifyApi.searchTracks(query, { limit: 1 });
   if (!data.tracks.items || data.tracks.items.length === 0) {
     return null;
   }
@@ -24,22 +23,18 @@ async function searchTrack(query, accessToken) {
 }
 
 async function findSimilarSongs(audioFeatures, accessToken) {
-  const query = `seed_tracks=${audioFeatures.id}`;
-
-  const response = await fetch(`https://api.spotify.com/v1/recommendations?limit=5&${query}`, {
-    headers: {
-      'Authorization': 'Bearer ' + accessToken
-    }
+  spotifyApi.setAccessToken(accessToken);
+  const data = await spotifyApi.getRecommendations({
+    limit: 5,
+    seed_tracks: [audioFeatures.id],
   });
-
-  const data = await response.json();
   return data.tracks;
 }
 
 function clearInput() {
   document.getElementById('song-name').value = '';
   document.getElementById('song-name').focus();
-  
+
   const similarSongsTable = document.getElementById('similar-songs-table');
   if (similarSongsTable) {
     similarSongsTable.style.display = 'none';
@@ -49,8 +44,8 @@ function clearInput() {
   if (similarSongsList) {
     similarSongsList.innerHTML = '';
   }
-  
 }
+
 function clearTable() {
   document.getElementById('song-name').value = '';
   document.getElementById('song-name').focus();
@@ -63,8 +58,8 @@ async function main() {
   let accessToken = getURLParams().access_token;
 
   if (!accessToken) {
-    fetch('/token').then(res => {
-      res.json().then(data => {
+    fetch('/token').then((res) => {
+      res.json().then((data) => {
         accessToken = data.access_token;
       });
     });
@@ -85,12 +80,7 @@ async function main() {
       return;
     }
 
-    const audioFeaturesResponse = await fetch(`https://api.spotify.com/v1/audio-features/${track.id}`, {
-      headers: {
-        'Authorization': 'Bearer ' + accessToken
-      }
-    });
-    const audioFeatures = await audioFeaturesResponse.json();
+    const audioFeatures = await spotifyApi.getAudioFeaturesForTrack(track.id);
 
     const similarSongs = await findSimilarSongs(audioFeatures, accessToken);
 
