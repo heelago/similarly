@@ -139,7 +139,6 @@ const similarSongs = await findSimilarSongs(audioFeatures.uri);
   } catch (error) {
     res.status(500).send(error.message);
   }
-});
 
 async function searchTrack(query) {
   const { body } = await spotifyApi.searchTracks(`track:${query}`, { limit: 1 });
@@ -175,4 +174,4 @@ async function getAccessToken() {
   });
   return body;
 }
-
+});
