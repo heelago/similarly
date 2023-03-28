@@ -7,10 +7,10 @@ import cookieParser from 'cookie-parser';
 import querystring from 'querystring';
 import fetch from 'node-fetch';
 import SpotifyWebApi from 'spotify-web-api-js';
+import path from 'path';
 
 const app = express();
 const port = process.env.PORT || 3000;
-
 
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
@@ -25,10 +25,10 @@ const spotifyApi = new SpotifyWebApi({
 
 app.use(cors())
   .use(cookieParser())
-  .use(express.static(__dirname + '/'));
+  .use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/index.html');
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.get('/login', (req, res) => {
