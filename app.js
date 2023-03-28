@@ -55,12 +55,21 @@ function clearInput() {
 }
 
 function clearTable() {
+  // Clear the input field and focus on it
   document.getElementById('song-name').value = '';
   document.getElementById('song-name').focus();
-  const similarSongsTable = document.getElementById('similar-songs');
-  similarSongsTable.innerHTML = '';
+
+  // Clear the table by removing its rows
+  const tableBody = document.getElementById('similar-songs');
+  while (tableBody.firstChild) {
+    tableBody.removeChild(tableBody.firstChild);
+  }
+
+  // Hide the table
+  const similarSongsTable = document.getElementById('similar-songs-table');
   similarSongsTable.style.display = 'none';
 }
+
 
 async function main() {
   let accessToken = getURLParams().access_token;
