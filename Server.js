@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const request = require('request');
 const express = require('express');
 const cors = require('cors');
@@ -9,9 +11,9 @@ const SpotifyWebApi = require('spotify-web-api-js');
 const app = express();
 const port = process.env.PORT || 3000;
 
-const CLIENT_ID = '951ccbe3f9a34e04a968f3e692bdb550';
-const CLIENT_SECRET = '257a2e639d214d018d5e5dd70e7fee58';
-const REDIRECT_URI = 'https://similarly.herokuapp.com/callback';
+const CLIENT_ID = process.env.CLIENT_ID;
+const CLIENT_SECRET = process.env.CLIENT_SECRET;
+const REDIRECT_URI = process.env.REDIRECT_URI;
 const STATE_KEY = 'spotify_auth_state';
 
 const spotifyApi = new SpotifyWebApi({
@@ -176,4 +178,7 @@ async function getAccessToken() {
   });
   return body;
 }
+app.listen(port, () => {
+  console.log(`Server is listening on port ${port}`);
+});
 
