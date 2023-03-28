@@ -126,9 +126,6 @@ app.get('/search', async (req, res) => {
   }
 });
 
-  }
-});
-
 
 app.get('/similar-songs', async (req, res) => {
   const songName = req.query.songName;
