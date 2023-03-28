@@ -1,14 +1,12 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-
-const request = require('request');
-const express = require('express');
-const cors = require('cors');
-const cookieParser = require('cookie-parser');
-const querystring = require('querystring');
-const fetch = require('node-fetch');
-const SpotifyWebApi = require('spotify-web-api-js');
+import express from 'express';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import querystring from 'querystring';
+import fetch from 'node-fetch';
+import SpotifyWebApi from 'spotify-web-api-js';
 
 const app = express();
 const port = process.env.PORT || 3000;
