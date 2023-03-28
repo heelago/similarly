@@ -7,7 +7,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 const CLIENT_ID = '951ccbe3f9a34e04a968f3e692bdb550';
 const CLIENT_SECRET = '257a2e639d214d018d5e5dd70e7fee58';
-const REDIRECT_URI = 'http://localhost:3000/callback';
+const REDIRECT_URI = 'https://similarly.herokuapp.com/callback';
 const STATE_KEY = 'spotify_auth_state';
 
 app.use(cors())
