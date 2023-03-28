@@ -110,13 +110,14 @@ app.get('/search', async (req, res) => {
     }
 
     const track = data.body.tracks.items[0];
-    const audioFeatures = await spotifyApi
-	const SpotifyWebApi = require('spotify-web-api-js');
+    const audioFeatures = await spotifyApi.getAudioFeaturesForTrack(track.id);
 
-const spotifyApi = new SpotifyWebApi({
-  clientId: process.env.CLIENT_ID,
-  clientSecret: process.env.CLIENT_SECRET,
+    res.json(audioFeatures);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
 });
+
 
 app.get('/similar-songs', async (req, res) => {
   const songName = req.query.songName;
