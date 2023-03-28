@@ -26,10 +26,10 @@ const spotifyApi = new SpotifyWebApi({
 
 app.use(cors())
   .use(cookieParser())
-  .use(express.static(__dirname + '/public'));
+  .use(express.static(__dirname + '/'));
 
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/public/index.html');
+  res.sendFile(__dirname + '/index.html');
 });
 
 app.get('/login', (req, res) => {
