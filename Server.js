@@ -10,7 +10,8 @@ const fetch = require('node-fetch');
 const SpotifyWebApi = require('spotify-web-api-js');
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
+
 
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
