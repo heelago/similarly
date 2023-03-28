@@ -131,14 +131,14 @@ app.get('/similar-songs', async (req, res) => {
       return;
     }
 
-const audioFeatures = await getAudioFeatures(track.id);
-const similarSongs = await findSimilarSongs(audioFeatures.uri);
-
+    const audioFeatures = await getAudioFeatures(track.id);
+    const similarSongs = await findSimilarSongs(audioFeatures.uri);
 
     res.json(similarSongs);
   } catch (error) {
     res.status(500).send(error.message);
   }
+});
 
 async function searchTrack(query) {
   const { body } = await spotifyApi.searchTracks(`track:${query}`, { limit: 1 });
@@ -174,4 +174,3 @@ async function getAccessToken() {
   });
   return body;
 }
-});
