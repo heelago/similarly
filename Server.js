@@ -5,7 +5,6 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import querystring from 'querystring';
-import fetch from 'node-fetch';
 import SpotifyWebApi from 'spotify-web-api-js';
 import path from 'path';
 
@@ -128,7 +127,6 @@ app.get('/similar-songs', async (req, res) => {
 
   try {
     const { access_token } = await getAccessToken();
-    spotifyApi.setAccessToken(access_token);
 
     const track = await searchTrack(songName);
     if (!track) {
