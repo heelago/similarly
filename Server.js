@@ -131,8 +131,9 @@ app.get('/similar-songs', async (req, res) => {
       return;
     }
 
-    const audioFeatures = await getAudioFeatures(track.id);
-    const similarSongs = await findSimilarSongs(audioFeatures.id);
+const audioFeatures = await getAudioFeatures(track.id);
+const similarSongs = await findSimilarSongs(audioFeatures.uri);
+
 
     res.json(similarSongs);
   } catch (error) {
