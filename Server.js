@@ -129,10 +129,12 @@ app.get('/search', async (req, res) => {
 
 app.get('/similar-songs', async (req, res) => {
   const songName = req.query.songName;
+  const access_token = req.query.access_token;
+
+  // Set the access token for the SpotifyWebApi instance
+  spotifyApi.setAccessToken(access_token);
 
   try {
-    const { access_token } = await getAccessToken();
-
     const track = await searchTrack(songName);
     if (!track) {
       res.status(404).send('Could not find a track with that name');
@@ -147,6 +149,7 @@ app.get('/similar-songs', async (req, res) => {
     res.status(500).send(error.message);
   }
 });
+
 
 async function searchTrack(query) {
   const { body } = await spotifyApi.searchTracks(`track:${query}`, { limit: 1 });
