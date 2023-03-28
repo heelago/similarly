@@ -16,7 +16,7 @@
     "node-fetch": "^2.6.1",
     "request": "^2.88.2",
     "spotify-web-api-js": "^1.5.2",
-   "dotenv":"^0.0.2"
+   "dotenv":"0.0.2"
   },
   "description": ""
 }
