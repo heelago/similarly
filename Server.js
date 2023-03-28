@@ -3,6 +3,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const querystring = require('querystring');
 const fetch = require('node-fetch');
+const SpotifyWebApi = require('spotify-web-api-js');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -11,6 +12,12 @@ const CLIENT_ID = '951ccbe3f9a34e04a968f3e692bdb550';
 const CLIENT_SECRET = '257a2e639d214d018d5e5dd70e7fee58';
 const REDIRECT_URI = 'https://similarly.herokuapp.com/callback';
 const STATE_KEY = 'spotify_auth_state';
+
+const spotifyApi = new SpotifyWebApi({
+  clientId: CLIENT_ID,
+  clientSecret: CLIENT_SECRET,
+  redirectUri: REDIRECT_URI
+});
 
 app.use(cors())
   .use(cookieParser())
@@ -26,14 +33,8 @@ app.get('/login', (req, res) => {
 
   const scope = 'user-read-private user-read-email user-library-read playlist-read-private playlist-modify-public';
 
-  res.redirect('https://accounts.spotify.com/authorize?' +
-    querystring.stringify({
-      response_type: 'code',
-      client_id: CLIENT_ID,
-      scope: scope,
-      redirect_uri: REDIRECT_URI,
-      state: state
-    }));
+  const authorizeURL = spotifyApi.createAuthorizeURL(scope, state);
+  res.redirect(authorizeURL);
 });
 
 app.get('/callback', async (req, res) => {
@@ -50,36 +51,21 @@ app.get('/callback', async (req, res) => {
 
   res.clearCookie(STATE_KEY);
 
-  const params = new URLSearchParams();
-  params.append('code', code);
-  params.append('redirect_uri', REDIRECT_URI);
-  params.append('grant_type', 'authorization_code');
-
-  const auth = 'Basic ' + Buffer.from(CLIENT_ID + ':' + CLIENT_SECRET).toString('base64');
-  const headers = {
-    'Content-Type': 'application/x-www-form-urlencoded',
-    'Authorization': auth
-  };
-
   try {
-    const response = await fetch('https://accounts.spotify.com/api/token', {
-      method: 'POST',
-      body: params,
-      headers: headers
-    });
+    const data = await spotifyApi.authorizationCodeGrant(code);
 
-    const data = await response.json();
+    const access_token = data.body.access_token;
+    const expires_in = data.body.expires_in;
+    const refresh_token = data.body.refresh_token;
 
-    const access_token = data.access_token;
-    const expires_in = data.expires_in;
-    const refresh_token = data.refresh_token;
+    spotifyApi.setAccessToken(access_token);
+    spotifyApi.setRefreshToken(refresh_token);
 
     res.redirect('/#' + querystring.stringify({
       access_token: access_token,
       expires_in: expires_in,
       refresh_token: refresh_token
     }));
-
   } catch (error) {
     res.redirect('/#' + querystring.stringify({
       error: 'invalid_token'
@@ -89,31 +75,8 @@ app.get('/callback', async (req, res) => {
 
 app.get('/token/:type?', async (req, res) => {
   const type = req.params.type;
-  const authOptions = {
-    method: 'POST',
-    url: 'https://accounts.spotify.com/api/token',
-    headers: {
-      'Authorization': 'Basic ' + (new Buffer.from(CLIENT_ID + ':' + CLIENT_SECRET).toString('base64')),
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
-    form: {
-      grant_type: 'client_credentials'
-    },
-    json: true
-  };
 
   try {
-    const response = await fetch(authOptions.url, {
-      method: authOptions.method,
-      body: querystring.stringify(authOptions.form),
-      headers: authOptions.headers
-    });
-
-    const data = await response.json();
-
-    const access_token = data.access_token;
-    const expires_in = data.expires_in;
-
     if (type === 'refresh') {
       const refresh_token = req.query.refresh_token;
       if (!refresh_token) {
@@ -121,44 +84,94 @@ app.get('/token/:type?', async (req, res) => {
         return;
       }
 
-      const refreshParams = new URLSearchParams();
-      refreshParams.append('grant_type', 'refresh_token');
-      refreshParams.append('refresh_token', refresh_token);
+      const data = await spotifyApi.refreshAccessToken(refresh_token);
 
-      const refreshResponse = await fetch('https://accounts.spotify.com/api/token', {
-        method: 'POST',
-        body: refreshParams,
-        headers: {
-          'Authorization': 'Basic ' + (new Buffer.from(CLIENT_ID + ':' + CLIENT_SECRET).toString('base64')),
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      });
-
-      const refreshData = await refreshResponse.json();
-      res.json(refreshData);
+      res.json(data.body);
     } else {
-      res.json(data);
+      const data = await spotifyApi.clientCredentialsGrant();
+
+      res.json(data.body);
     }
   } catch (error) {
     res.status(500).send(error.message);
   }
 });
 
-app.get('*', (req, res) => {
-  res.sendFile(__dirname + '/public/index.html');
+app.get('/search', async (req, res) => {
+  const query = req.query.query;
+  const accessToken = req.query.access_token;
+
+  try {
+    const data = await spotifyApi.searchTracks(query, { limit: 1, offset: 0, market: 'US' });
+
+    if (!data.body.tracks.items || data.body.tracks.items.length === 0) {
+      res.status(404).send('No tracks found');
+      return;
+    }
+
+    const track = data.body.tracks.items[0];
+    const audioFeatures = await spotifyApi
+	const SpotifyWebApi = require('spotify-web-api-js');
+
+const spotifyApi = new SpotifyWebApi({
+  clientId: process.env.CLIENT_ID,
+  clientSecret: process.env.CLIENT_SECRET,
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+app.get('/similar-songs', async (req, res) => {
+  const songName = req.query.songName;
 
-function generateRandomString(length) {
-  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let text = '';
+  try {
+    const { access_token } = await getAccessToken();
+    spotifyApi.setAccessToken(access_token);
 
-  for (let i = 0; i < length; i++) {
-    text += possible.charAt(Math.floor(Math.random() * possible.length));
+    const track = await searchTrack(songName);
+    if (!track) {
+      res.status(404).send('Could not find a track with that name');
+      return;
+    }
+
+    const audioFeatures = await getAudioFeatures(track.id);
+    const similarSongs = await findSimilarSongs(audioFeatures.id);
+
+    res.json(similarSongs);
+  } catch (error) {
+    res.status(500).send(error.message);
   }
+});
 
-  return text;
+async function searchTrack(query) {
+  const { body } = await spotifyApi.searchTracks(`track:${query}`, { limit: 1 });
+  if (!body.tracks.items || body.tracks.items.length === 0) {
+    return null;
+  }
+  return body.tracks.items[0];
 }
+
+async function getAudioFeatures(trackId) {
+  const { body } = await spotifyApi.getAudioFeaturesForTrack(trackId);
+  return body;
+}
+
+async function findSimilarSongs(trackId) {
+  const { body } = await spotifyApi.getRecommendations({
+    limit: 5,
+    seed_tracks: [trackId],
+  });
+  return body.tracks;
+}
+
+async function getAccessToken() {
+  const { body } = await request.post({
+    url: 'https://accounts.spotify.com/api/token',
+    headers: {
+      Authorization: `Basic ${Buffer.from(`${process.env.CLIENT_ID}:${process.env.CLIENT_SECRET}`).toString('base64')}`,
+    },
+    form: {
+      grant_type: 'client_credentials',
+    },
+    json: true,
+  });
+  return body;
+}
+
