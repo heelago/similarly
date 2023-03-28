@@ -1,4 +1,12 @@
 console.log('APP JS INIT');
+const path = (new URL('.', import.meta.url)).pathname;
+app.use(express.static(path, {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript');
+    }
+  }
+}));
 
 import SpotifyWebApi from 'spotify-web-api-js';
 
