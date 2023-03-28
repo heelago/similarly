@@ -3,16 +3,18 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const querystring = require('querystring');
 const fetch = require('node-fetch');
+
 const app = express();
 const port = process.env.PORT || 3000;
+
 const CLIENT_ID = '951ccbe3f9a34e04a968f3e692bdb550';
 const CLIENT_SECRET = '257a2e639d214d018d5e5dd70e7fee58';
 const REDIRECT_URI = 'https://similarly.herokuapp.com/callback';
 const STATE_KEY = 'spotify_auth_state';
 
 app.use(cors())
-   .use(cookieParser())
-   .use(express.static(__dirname + '/public'));
+  .use(cookieParser())
+  .use(express.static(__dirname + '/public'));
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/public/index.html');
@@ -25,7 +27,6 @@ app.get('/login', (req, res) => {
   const scope = 'user-read-private user-read-email user-library-read playlist-read-private playlist-modify-public';
 
   res.redirect('https://accounts.spotify.com/authorize?' +
- 
     querystring.stringify({
       response_type: 'code',
       client_id: CLIENT_ID,
@@ -89,7 +90,7 @@ app.get('/callback', async (req, res) => {
 app.get('/token/:type?', async (req, res) => {
   const type = req.params.type;
   const authOptions = {
-        method: 'POST',
+    method: 'POST',
     url: 'https://accounts.spotify.com/api/token',
     headers: {
       'Authorization': 'Basic ' + (new Buffer.from(CLIENT_ID + ':' + CLIENT_SECRET).toString('base64')),
@@ -110,22 +111,41 @@ app.get('/token/:type?', async (req, res) => {
 
     const data = await response.json();
 
-    if (!response.ok) {
-      throw new Error(`Error searching for ${type}s: ${data.error.message}`);
-    }
+    const access_token = data.access_token;
+    const expires_in = data.expires_in;
 
-    // If the type parameter is not provided, send the entire data object
-    if (!type) {
-      res.send(data);
+    if (type === 'refresh') {
+      const refresh_token = req.query.refresh_token;
+      if (!refresh_token) {
+        res.status(401).send('Missing refresh token');
+        return;
+      }
+
+      const refreshParams = new URLSearchParams();
+      refreshParams.append('grant_type', 'refresh_token');
+      refreshParams.append('refresh_token', refresh_token);
+
+      const refreshResponse = await fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
+        body: refreshParams,
+        headers: {
+          'Authorization': 'Basic ' + (new Buffer.from(CLIENT_ID + ':' + CLIENT_SECRET).toString('base64')),
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      });
+
+      const refreshData = await refreshResponse.json();
+      res.json(refreshData);
     } else {
-      // If the type parameter is provided, proceed with your existing logic
-      // (e.g., searching for tracks, artists, etc.)
+      res.json(data);
     }
-
   } catch (error) {
-    console.error(error);
-    res.status(400).send({ 'error': `Error searching for ${type}s` });
+    res.status(500).send(error.message);
   }
+});
+
+app.get('*', (req, res) => {
+  res.sendFile(__dirname + '/public/index.html');
 });
 
 app.listen(port, () => {
@@ -142,8 +162,3 @@ function generateRandomString(length) {
 
   return text;
 }
-
-
-
-
-   
