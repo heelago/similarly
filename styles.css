@@ -1,0 +1,33 @@
+/* Custom styles */
+
+body {
+  font-family: 'Poppins', sans-serif;
+}
+
+.hero.is-info {
+  background-color: #4a4a4a;
+}
+
+.button.is-link {
+  background-color: #4a4a4a;
+  border-color: #4a4a4a;
+}
+
+.button.is-link:hover {
+  background-color: #333333;
+  border-color: #333333;
+}
+
+.button.is-danger {
+  background-color: #f14668;
+  border-color: #f14668;
+}
+
+.button.is-danger:hover {
+  background-color: #ef2d56;
+  border-color: #ef2d56;
+}
+
+.table.is-striped tbody tr:nth-child(2n) {
+  background-color: #f5f5f5;
+}
