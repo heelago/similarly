@@ -24,15 +24,17 @@ const spotifyApi = new SpotifyWebApi({
 
 app.use(cors())
   .use(cookieParser())
-  .use(express.static(path.join(process.cwd(), 'public')));
-  app.use(express.static(path.join(process.cwd(), 'public'), {
-  setHeaders: (res, path) => {
-    if (path.endsWith('.js')) {
-      res.setHeader('Content-Type', 'application/javascript');
+  .use(express.static(path.join(process.cwd(), 'public'), {
+    setHeaders: (res, path) => {
+      if (path.endsWith('.js')) {
+        res.setHeader('Content-Type', 'application/javascript');
+      }
     }
-  }
-}));
+  }));
 
+app.get('/app.js', (req, res) => {
+  res.sendFile(path.join(process.cwd(), 'public', 'app.js'));
+});
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'index.html'));
@@ -117,6 +119,8 @@ app.get('/search', async (req, res) => {
     accessToken: accessToken,
   });
 
+
+
   try {
     const data = await spotifyApiWithToken.searchTracks(query, { limit: 1, offset: 0, market: 'US' });
 
@@ -133,8 +137,6 @@ app.get('/search', async (req, res) => {
     res.status(500).send(error.message);
   }
 });
-
-
 app.get('/similar-songs', async (req, res) => {
   const songName = req.query.songName;
   const access_token = req.query.access_token;

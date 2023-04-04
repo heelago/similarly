@@ -1,23 +1,20 @@
-
 {
   "name": "similarly",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "",
+  "main": "server.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node Server.js"
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "cookie-parser": "^1.4.6",
+    "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
-    "express": "^4.18.2",
-    "request": "^2.88.2",
-    "spotify-web-api-js": "^1.5.2",
-    "dotenv":"^16.0.0"
-  },
-  "description": ""
+    "dotenv": "^16.0.0",
+    "express": "^4.17.3",
+    "spotify-web-api-js": "^1.5.2"
+  }
 }
