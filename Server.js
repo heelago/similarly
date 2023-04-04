@@ -25,6 +25,14 @@ const spotifyApi = new SpotifyWebApi({
 app.use(cors())
   .use(cookieParser())
   .use(express.static(path.join(process.cwd(), 'public')));
+  app.use(express.static(path.join(process.cwd(), 'public'), {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript');
+    }
+  }
+}));
+
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'index.html'));

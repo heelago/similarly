@@ -1,139 +1,108 @@
-console.log('APP JS INIT');
-const path = (new URL('.', import.meta.url)).pathname;
-app.use(express.static(path, {
-  setHeaders: (res, path) => {
-    if (path.endsWith('.js')) {
-      res.setHeader('Content-Type', 'application/javascript');
-    }
-  }
-}));
+import dotenv from 'dotenv';
+dotenv.config();
 
+import express from 'express';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import querystring from 'querystring';
 import SpotifyWebApi from 'spotify-web-api-js';
+import path from 'path';
 
-const spotifyApi = new SpotifyWebApi();
+const app = express();
+const port = process.env.PORT || 3000;
 
-function getURLParams() {
-  const searchParams = new URLSearchParams(window.location.search.substring(1));
-  const params = {};
-  for (const [key, value] of searchParams.entries()) {
-    params[key] = value;
-  }
-  return params;
-}
+const CLIENT_ID = process.env.CLIENT_ID;
+const CLIENT_SECRET = process.env.CLIENT_SECRET;
+const REDIRECT_URI = process.env.REDIRECT_URI;
+const STATE_KEY = 'spotify_auth_state';
 
-async function searchTrack(query, accessToken) {
-  spotifyApi.setAccessToken(accessToken);
-  const data = await spotifyApi.searchTracks(query, { limit: 1 });
-  if (!data.tracks.items || data.tracks.items.length === 0) {
-    return null;
-  }
-  return data.tracks.items[0];
-}
+const spotifyApi = new SpotifyWebApi({
+  clientId: CLIENT_ID,
+  clientSecret: CLIENT_SECRET,
+  redirectUri: REDIRECT_URI
+});
 
-async function findSimilarSongs(audioFeatures, accessToken) {
-  spotifyApi.setAccessToken(accessToken);
-  const data = await spotifyApi.getRecommendations({
-    limit: 5,
-    seed_tracks: [audioFeatures.id],
-  });
-  return data.tracks;
-}
+app.use(cors())
+  .use(cookieParser())
+  .use(express.static(path.join(__dirname, 'public')));
 
-function clearInput() {
-  document.getElementById('song-name').value = '';
-  document.getElementById('song-name').focus();
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
 
-  const similarSongsTable = document.getElementById('similar-songs-table');
-  if (similarSongsTable) {
-    similarSongsTable.style.display = 'none';
-  }
+app.get('/login', (req, res) => {
+  const state = generateRandomString(16);
+  res.cookie(STATE_KEY, state);
 
-  const similarSongsList = document.getElementById('similar-songs');
-  if (similarSongsList) {
-    similarSongsList.innerHTML = '';
-  }
-}
+  const scope = 'user-read-private user-read-email user-library-read playlist-read-private playlist-modify-public';
 
-function clearTable() {
-  // Clear the input field and focus on it
-  document.getElementById('song-name').value = '';
-  document.getElementById('song-name').focus();
+  const authorizeURL = spotifyApi.createAuthorizeURL(scope, state);
+  res.redirect(authorizeURL);
+});
 
-  // Clear the table by removing its rows
-  const tableBody = document.getElementById('similar-songs');
-  while (tableBody.firstChild) {
-    tableBody.removeChild(tableBody.firstChild);
+app.get('/callback', async (req, res) => {
+  const code = req.query.code || null;
+  const state = req.query.state || null;
+  const storedState = req.cookies ? req.cookies[STATE_KEY] : null;
+
+  if (state === null || state !== storedState) {
+    res.redirect('/#' + querystring.stringify({
+      error: 'state_mismatch'
+    }));
+    return;
   }
 
-  // Hide the table
-  const similarSongsTable = document.getElementById('similar-songs-table');
-  similarSongsTable.style.display = 'none';
-}
+  res.clearCookie(STATE_KEY);
 
+  try {
+    const data = await spotifyApi.authorizationCodeGrant(code);
 
-async function main() {
-  let accessToken = getURLParams().access_token;
+    const access_token = data.body.access_token;
+    const expires_in = data.body.expires_in;
+    const refresh_token = data.body.refresh_token;
 
-  if (!accessToken) {
-    fetch('/token').then((res) => {
-      res.json().then((data) => {
-        accessToken = data.access_token;
-      });
-    });
+    spotifyApi.setAccessToken(access_token);
+    spotifyApi.setRefreshToken(refresh_token);
+
+    res.redirect('/#' + querystring.stringify({
+      access_token: access_token,
+      expires_in: expires_in,
+      refresh_token: refresh_token
+    }));
+  } catch (error) {
+    res.redirect('/#' + querystring.stringify({
+      error: 'invalid_token'
+    }));
   }
+});
 
-  document.getElementById('song-form').addEventListener('submit', async (event) => {
-    event.preventDefault();
+app.get('/token/:type?', async (req, res) => {
+  const type = req.params.type;
 
-    const songName = document.getElementById('song-name').value;
-    if (!songName) {
-      alert('Please enter a song name');
-      return;
-    }
-
-    const track = await searchTrack(songName, accessToken);
-    if (!track) {
-      alert('Could not find a track with that name');
-      return;
-    }
-
-    const audioFeatures = await spotifyApi.getAudioFeaturesForTrack(track.id);
-
-    const similarSongs = await findSimilarSongs(audioFeatures, accessToken);
-
-    const similarSongsTable = document.getElementById('similar-songs-table');
-    similarSongsTable.style.display = 'table';
-    const similarSongsList = document.getElementById('similar-songs');
-    similarSongsList.innerHTML = '';
-
-    if (similarSongs.length === 0) {
-      const listItem = document.createElement('li');
-      listItem.textContent = 'No similar songs found';
-      similarSongsList.appendChild(listItem);
-    } else {
-      for (const song of similarSongs) {
-        const songName = song.name;
-        const artist = song.artists[0].name;
-        const releaseYear = new Date(song.album.release_date).getFullYear();
-
-        const tr = document.createElement('tr');
-
-        const tdTitle = document.createElement('td');
-        tdTitle.textContent = songName;
-        tr.appendChild(tdTitle);
-
-        const tdArtist = document.createElement('td');
-        tdArtist.textContent = artist;
-        tr.appendChild(tdArtist);
-
-        const tdYear = document.createElement('td');
-        tdYear.textContent = releaseYear;
-        tr.appendChild(tdYear);
-
-        similarSongsList.appendChild(tr);
+  try {
+    if (type === 'refresh') {
+      const refresh_token = req.query.refresh_token;
+      if (!refresh_token) {
+        res.status(401).send('Missing refresh token');
+        return;
       }
-    }
-  });
-}
 
-main();
+      const data = await spotifyApi.refreshAccessToken(refresh_token);
+
+      res.json(data.body);
+    } else {
+      const data = await spotifyApi.clientCredentialsGrant();
+
+      res.json(data.body);
+    }
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
+app.get('/search', async (req, res) => {
+  const query = req.query.query;
+  const accessToken = req.query.access_token;
+
+  // Instantiate a new SpotifyWebApi object with the access token
+  const spotifyApiWith

@@ -1,0 +1,91 @@
+/* Main styles */
+
+body {
+  font-family: 'Roboto', sans-serif;
+  background-color: #f1f1f1;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.hero.is-info {
+  background-color: #1DB954;
+  padding: 3rem;
+  color: #fff;
+}
+
+.has-text-centered {
+  text-align: center;
+}
+
+.form-section {
+  padding: 2rem;
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  margin: 2rem 0;
+  border-radius: 5px;
+}
+
+.form-section .field label {
+  font-size: 1.2rem;
+}
+
+.form-section .button.is-link {
+  background-color: #1DB954;
+  border-color: #1DB954;
+}
+
+.form-section .button.is-link:hover {
+  background-color: #fff;
+  color: #1DB954;
+}
+
+.form-section .button.is-danger {
+  background-color: #FF69B4;
+  border-color: #FF69B4;
+}
+
+.form-section .button.is-danger:hover {
+  background-color: #fff;
+  color: #FF69B4;
+}
+
+.table-section {
+  padding: 2rem;
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  margin: 2rem 0;
+  border-radius: 5px;
+}
+
+.table-section h3 {
+  margin-bottom: 2rem;
+}
+
+.table-section .table th {
+  font-weight: 700;
+}
+
+/* Responsive styles */
+
+@media screen and (max-width: 768px) {
+  .container {
+    padding: 0 1rem;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .hero.is-info {
+    padding: 2rem;
+  }
+  
+  .form-section {
+    padding: 1rem;
+  }
+  
+  .table-section {
+    padding: 1rem;
+  }
+}
