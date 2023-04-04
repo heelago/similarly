@@ -4,12 +4,18 @@ body {
   font-family: 'Poppins', sans-serif;
 }
 
-body {
-  background-color: red;
+.hero.is-info {
+  background-image: linear-gradient(to right, #667eea, #764ba2);
 }
 
-.hero.is-info {
-  background-color: #4a4a4a;
+.title {
+  font-size: 2.5rem;
+}
+
+.search-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .button.is-link {
